@@ -1315,12 +1315,6 @@ public class CommitLog {
                 }
 
                 try {
-                    if (flushCommitLogTimed) {
-                        Thread.sleep(interval);
-                    } else {
-                        this.waitForRunning(interval);
-                    }
-
                     if (printFlushProgress) {
                         this.printFlushProgress();
                     }
@@ -1335,6 +1329,13 @@ public class CommitLog {
                     if (past > 500) {
                         log.info("Flush data to disk costs {} ms", past);
                     }
+
+                    if (flushCommitLogTimed) {
+                        Thread.sleep(interval);
+                    } else {
+                        this.waitForRunning(interval);
+                    }
+
                 } catch (Throwable e) {
                     CommitLog.log.warn(this.getServiceName() + " service has exception. ", e);
                     this.printFlushProgress();
