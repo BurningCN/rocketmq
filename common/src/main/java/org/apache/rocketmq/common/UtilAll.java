@@ -584,4 +584,8 @@ public class UtilAll {
         String[] addrArray = str.split(splitor);
         return Arrays.asList(addrArray);
     }
+
+    public static boolean isNotBlank(String str) {
+        return !isBlank(str);
+    }
 }

@@ -21,6 +21,8 @@
 package org.apache.rocketmq.common.namesrv;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -61,17 +63,18 @@ public class TopAddressing {
     }
 
     public final String fetchNSAddr() {
+        // 3s是连接、读超时时间
         return fetchNSAddr(true, 3000);
     }
 
     public final String fetchNSAddr(boolean verbose, long timeoutMills) {
         String url = this.wsAddr;
         try {
-            if (!UtilAll.isBlank(this.unitName)) {
+            if (!UtilAll.isNotBlank(this.unitName)) {
                 url = url + "-" + this.unitName + "?nofix=1";
             }
             HttpTinyClient.HttpResult result = HttpTinyClient.httpGet(url, null, null, "UTF-8", timeoutMills);
-            if (200 == result.code) {
+            if (HttpURLConnection.HTTP_OK == result.code) {
                 String responseStr = result.content;
                 if (responseStr != null) {
                     return clearNewLine(responseStr);

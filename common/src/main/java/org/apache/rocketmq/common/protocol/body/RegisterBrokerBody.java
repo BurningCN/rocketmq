@@ -18,6 +18,7 @@
 package org.apache.rocketmq.common.protocol.body;
 
 import com.alibaba.fastjson.JSON;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
 import org.apache.rocketmq.common.DataVersion;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
@@ -50,12 +52,14 @@ public class RegisterBrokerBody extends RemotingSerializable {
             return super.encode();
         }
         long start = System.currentTimeMillis();
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DeflaterOutputStream outputStream = new DeflaterOutputStream(byteArrayOutputStream, new Deflater(Deflater.BEST_COMPRESSION));
-        DataVersion dataVersion = topicConfigSerializeWrapper.getDataVersion();
+
         ConcurrentMap<String, TopicConfig> topicConfigTable = cloneTopicConfigTable(topicConfigSerializeWrapper.getTopicConfigTable());
         assert topicConfigTable != null;
         try {
+            DataVersion dataVersion = topicConfigSerializeWrapper.getDataVersion();
             byte[] buffer = dataVersion.encode();
 
             // write data version
@@ -83,6 +87,7 @@ public class RegisterBrokerBody extends RemotingSerializable {
             outputStream.write(buffer);
 
             outputStream.finish();
+
             long interval = System.currentTimeMillis() - start;
             if (interval > 50) {
                 LOGGER.info("Compressing takes {}ms", interval);
@@ -184,13 +189,9 @@ public class RegisterBrokerBody extends RemotingSerializable {
     }
 
     public static ConcurrentMap<String, TopicConfig> cloneTopicConfigTable(
-        ConcurrentMap<String, TopicConfig> topicConfigConcurrentMap) {
+            ConcurrentMap<String, TopicConfig> topicConfigConcurrentMap) {
         ConcurrentHashMap<String, TopicConfig> result = new ConcurrentHashMap<String, TopicConfig>();
-        if (topicConfigConcurrentMap != null) {
-            for (Map.Entry<String, TopicConfig> entry : topicConfigConcurrentMap.entrySet()) {
-                result.put(entry.getKey(), entry.getValue());
-            }
-        }
+        result.putAll(topicConfigConcurrentMap);
         return result;
 
     }

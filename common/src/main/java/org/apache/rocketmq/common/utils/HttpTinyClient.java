@@ -44,7 +44,7 @@ public class HttpTinyClient {
 
             conn.connect();
             int respCode = conn.getResponseCode();
-            String resp = null;
+            String resp;
 
             if (HttpURLConnection.HTTP_OK == respCode) {
                 resp = IOTinyUtils.toString(conn.getInputStream(), encoding);
@@ -109,7 +109,7 @@ public class HttpTinyClient {
             conn.getOutputStream().write(encodedContent.getBytes(MixAll.DEFAULT_CHARSET));
 
             int respCode = conn.getResponseCode();
-            String resp = null;
+            String resp;
 
             if (HttpURLConnection.HTTP_OK == respCode) {
                 resp = IOTinyUtils.toString(conn.getInputStream(), encoding);
