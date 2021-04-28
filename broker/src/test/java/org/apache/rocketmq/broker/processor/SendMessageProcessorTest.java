@@ -89,6 +89,7 @@ public class SendMessageProcessorTest {
         when(mockChannel.remoteAddress()).thenReturn(new InetSocketAddress(1024));
         when(handlerContext.channel()).thenReturn(mockChannel);
         when(messageStore.lookMessageByOffset(anyLong())).thenReturn(new MessageExt());
+        brokerController.getMessageStoreConfig().setStorePathRootDir("target/SendMessageProcessorTest");
         sendMessageProcessor = new SendMessageProcessor(brokerController);
     }
 
@@ -99,6 +100,7 @@ public class SendMessageProcessorTest {
         assertPutResult(ResponseCode.SUCCESS);
     }
 
+    // ✔️
     @Test
     public void testProcessRequest_WithHook() throws RemotingCommandException {
         when(messageStore.asyncPutMessage(any(MessageExtBrokerInner.class)))
@@ -186,6 +188,7 @@ public class SendMessageProcessorTest {
         assertPutResult(ResponseCode.SLAVE_NOT_AVAILABLE);
     }
 
+    // ✔️
     @Test
     public void testProcessRequest_WithMsgBack() throws RemotingCommandException {
         when(messageStore.asyncPutMessage(any(MessageExtBrokerInner.class)))
@@ -198,6 +201,7 @@ public class SendMessageProcessorTest {
         assertThat(response.getCode()).isEqualTo(ResponseCode.SUCCESS);
     }
 
+    // ✔️
     @Test
     public void testProcessRequest_Transaction() throws RemotingCommandException {
         brokerController.setTransactionalMessageService(transactionMsgService);
