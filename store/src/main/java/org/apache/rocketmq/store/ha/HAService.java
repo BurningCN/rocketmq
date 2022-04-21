@@ -328,6 +328,7 @@ public class HAService {
 
     class HAClient extends ServiceThread {
         private static final int READ_MAX_BUFFER_SIZE = 1024 * 1024 * 4;
+        private static final int HEADER_SIZE = 8 + 4; // phyoffset + size
         private final AtomicReference<String> masterAddress = new AtomicReference<>();
         private final ByteBuffer reportOffset = ByteBuffer.allocate(8);
         private SocketChannel socketChannel;
@@ -434,11 +435,9 @@ public class HAService {
         }
 
         private boolean dispatchReadRequest() {
-            final int msgHeaderSize = 8 + 4; // phyoffset + size
-
             while (true) {
                 int diff = this.byteBufferRead.position() - this.dispatchPosition;
-                if (diff >= msgHeaderSize) {
+                if (diff >= HEADER_SIZE) {
                     long masterPhyOffset = this.byteBufferRead.getLong(this.dispatchPosition);
                     int bodySize = this.byteBufferRead.getInt(this.dispatchPosition + 8);
 
@@ -452,14 +451,14 @@ public class HAService {
                         }
                     }
 
-                    if (diff >= (msgHeaderSize + bodySize)) {
+                    if (diff >= (HEADER_SIZE + bodySize)) {
                         byte[] bodyData = byteBufferRead.array();
-                        int dataStart = this.dispatchPosition + msgHeaderSize;
+                        int dataStart = this.dispatchPosition + HEADER_SIZE;
 
                         HAService.this.defaultMessageStore.appendToCommitLog(
                                 masterPhyOffset, bodyData, dataStart, bodySize);
 
-                        this.dispatchPosition += msgHeaderSize + bodySize;
+                        this.dispatchPosition += HEADER_SIZE + bodySize;
 
                         if (!reportSlaveMaxOffsetPlus()) {
                             return false;
@@ -596,7 +595,12 @@ public class HAService {
         @Override
         public void shutdown() {
             super.shutdown();
-            closeMaster();
+            try {
+                closeMaster();
+                this.selector.close();
+            } catch (IOException e) {
+                log.error("HAClient shutdown exception", e);
+            }
         }
 
         // private void disableWriteFlag() {

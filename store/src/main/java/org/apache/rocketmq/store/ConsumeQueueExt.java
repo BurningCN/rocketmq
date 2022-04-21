@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * Extend of consume queue, to store something not important,
- * such as message store time, filter bit map and etc.
+ * such as message store time, filter bit map etc.
  * <p/>
  * <li>1. This class is used only by {@link ConsumeQueue}</li>
  * <li>2. And is week reliable.</li>
@@ -168,7 +168,7 @@ public class ConsumeQueueExt {
             log.warn("[BUG] Consume queue extend unit({}) is not found!", realOffset);
             return false;
         }
-        boolean ret = false;
+        boolean ret;
         try {
             ret = cqExtUnit.read(bufferResult.getByteBuffer());
         } finally {
@@ -217,7 +217,7 @@ public class ConsumeQueueExt {
                 final int wrotePosition = mappedFile.getWrotePosition();
                 final int blankSize = this.mappedFileSize - wrotePosition - END_BLANK_DATA_LENGTH;
 
-                // check whether has enough space.
+                // check whether it has enough space.
                 if (size > blankSize) {
                     fullFillToEnd(mappedFile, wrotePosition);
                     log.info("No enough space(need:{}, has:{}) of file {}, so fill to end",
@@ -561,7 +561,7 @@ public class ConsumeQueueExt {
 
         public void setFilterBitMap(final byte[] filterBitMap) {
             this.filterBitMap = filterBitMap;
-            // not safe transform, but size will be calculate by #calcUnitSize
+            // not safe transform, but size will be calculated by #calcUnitSize
             this.bitMapSize = (short) (filterBitMap == null ? 0 : filterBitMap.length);
         }
 

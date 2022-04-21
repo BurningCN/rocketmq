@@ -190,6 +190,7 @@ public class DefaultMessageStore implements MessageStore {
     /**
      * @throws IOException
      */
+    @Override
     public boolean load() {
         boolean result = true;
 
@@ -233,6 +234,7 @@ public class DefaultMessageStore implements MessageStore {
     /**
      * @throws Exception
      */
+    @Override
     public void start() throws Exception {
 
         lock = lockFile.getChannel().tryLock(0, 1, false);
@@ -305,6 +307,7 @@ public class DefaultMessageStore implements MessageStore {
         this.shutdown = false;
     }
 
+    @Override
     public void shutdown() {
         if (!this.shutdown) {
             this.shutdown = true;
@@ -353,6 +356,7 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    @Override
     public void destroy() {
         this.destroyLogics();
         this.commitLog.destroy();
@@ -557,6 +561,7 @@ public class DefaultMessageStore implements MessageStore {
         return commitLog;
     }
 
+    @Override
     public GetMessageResult getMessage(final String group, final String topic, final int queueId, final long offset,
         final int maxMsgNums,
         final MessageFilter messageFilter) {
@@ -685,7 +690,7 @@ public class DefaultMessageStore implements MessageStore {
                                 continue;
                             }
 
-                            this.storeStatsService.getGetMessageTransferedMsgCount().add(1);
+                            this.storeStatsService.getGetMessageTransferredMsgCount().add(1);
                             getResult.addMessage(selectResult);
                             status = GetMessageStatus.FOUND;
                             nextPhyFileStartOffset = Long.MIN_VALUE;
@@ -738,6 +743,7 @@ public class DefaultMessageStore implements MessageStore {
         return getResult;
     }
 
+    @Override
     public long getMaxOffsetInQueue(String topic, int queueId) {
         ConsumeQueue logic = this.findConsumeQueue(topic, queueId);
         if (logic != null) {
@@ -748,6 +754,7 @@ public class DefaultMessageStore implements MessageStore {
         return 0;
     }
 
+    @Override
     public long getMinOffsetInQueue(String topic, int queueId) {
         ConsumeQueue logic = this.findConsumeQueue(topic, queueId);
         if (logic != null) {
@@ -775,6 +782,7 @@ public class DefaultMessageStore implements MessageStore {
         return 0;
     }
 
+    @Override
     public long getOffsetInQueueByTime(String topic, int queueId, long timestamp) {
         ConsumeQueue logic = this.findConsumeQueue(topic, queueId);
         if (logic != null) {
@@ -784,6 +792,7 @@ public class DefaultMessageStore implements MessageStore {
         return 0;
     }
 
+    @Override
     public MessageExt lookMessageByOffset(long commitLogOffset) {
         SelectMappedBufferResult sbr = this.commitLog.getMessage(commitLogOffset, 4);
         if (null != sbr) {
@@ -820,6 +829,7 @@ public class DefaultMessageStore implements MessageStore {
         return this.commitLog.getMessage(commitLogOffset, msgSize);
     }
 
+    @Override
     public String getRunningDataInfo() {
         return this.storeStatsService.toString();
     }
@@ -886,9 +896,7 @@ public class DefaultMessageStore implements MessageStore {
     public long getEarliestMessageTime(String topic, int queueId) {
         ConsumeQueue logicQueue = this.findConsumeQueue(topic, queueId);
         if (logicQueue != null) {
-            long minLogicOffset = logicQueue.getMinLogicOffset();
-
-            SelectMappedBufferResult result = logicQueue.getIndexBuffer(minLogicOffset / ConsumeQueue.CQ_STORE_UNIT_SIZE);
+            SelectMappedBufferResult result = logicQueue.getIndexBuffer(logicQueue.getMinOffsetInQueue());
             return getStoreTime(result);
         }
 
@@ -1087,6 +1095,7 @@ public class DefaultMessageStore implements MessageStore {
         return 0;
     }
 
+    @Override
     public void cleanExpiredConsumerQueue() {
         long minCommitLogOffset = this.commitLog.getMinOffset();
 
@@ -1737,9 +1746,9 @@ public class DefaultMessageStore implements MessageStore {
             long currentTimestamp = System.currentTimeMillis();
             if ((currentTimestamp - this.lastRedeleteTimestamp) > interval) {
                 this.lastRedeleteTimestamp = currentTimestamp;
-                int destroyMapedFileIntervalForcibly =
+                int destroyMappedFileIntervalForcibly =
                     DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
-                if (DefaultMessageStore.this.commitLog.retryDeleteFirstFile(destroyMapedFileIntervalForcibly)) {
+                if (DefaultMessageStore.this.commitLog.retryDeleteFirstFile(destroyMappedFileIntervalForcibly)) {
                 }
             }
         }

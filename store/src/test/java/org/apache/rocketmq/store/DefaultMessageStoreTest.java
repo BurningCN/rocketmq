@@ -500,14 +500,13 @@ public class DefaultMessageStoreTest {
 
         GetMessageResult getMessageResult20 = messageStore.getMessage(group, topic, 0, 0, 20, null);
         assertThat(getMessageResult20.getMessageBufferList().size()).isEqualTo(20);
-
         getMessageResult20.release();
-        GetMessageResult getMessageResult45 = messageStore.getMessage(group, topic, 0, 0, 10, null);
-        assertThat(getMessageResult45.getMessageBufferList().size()).isEqualTo(10);
-        getMessageResult45.release();
+
+        GetMessageResult getMessageResult10 = messageStore.getMessage(group, topic, 0, 0, 10, null);
+        assertThat(getMessageResult10.getMessageBufferList().size()).isEqualTo(10);
+        getMessageResult10.release();
 
     }
-
     @Test
     public void testRecover() throws Exception {
         String topic = "recoverTopic";

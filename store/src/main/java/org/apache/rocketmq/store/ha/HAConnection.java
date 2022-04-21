@@ -74,7 +74,7 @@ public class HAConnection {
             try {
                 this.socketChannel.close();
             } catch (IOException e) {
-                HAConnection.log.error("", e);
+                HAConnection.log.error("close socketChannel failed", e);
             }
         }
     }
@@ -205,8 +205,8 @@ public class HAConnection {
         private final Selector selector;
         private final SocketChannel socketChannel;
 
-        private final int headerSize = 8 + 4;
-        private final ByteBuffer byteBufferHeader = ByteBuffer.allocate(headerSize);
+        private static final int HEADER_SIZE = 8 + 4;
+        private final ByteBuffer byteBufferHeader = ByteBuffer.allocate(HEADER_SIZE);
         private long nextTransferFromWhere = -1;
         private SelectMappedBufferResult selectMappedBufferResult;
         private boolean lastWriteOver = true;
@@ -263,7 +263,7 @@ public class HAConnection {
 
                             // Build Header
                             this.byteBufferHeader.position(0);
-                            this.byteBufferHeader.limit(headerSize);
+                            this.byteBufferHeader.limit(HEADER_SIZE);
                             this.byteBufferHeader.putLong(this.nextTransferFromWhere);
                             this.byteBufferHeader.putInt(0);
                             this.byteBufferHeader.flip();
@@ -294,7 +294,7 @@ public class HAConnection {
 
                         // Build Header
                         this.byteBufferHeader.position(0);
-                        this.byteBufferHeader.limit(headerSize);
+                        this.byteBufferHeader.limit(HEADER_SIZE);
                         this.byteBufferHeader.putLong(thisOffset);
                         this.byteBufferHeader.putInt(size);
                         this.byteBufferHeader.flip();
@@ -393,9 +393,5 @@ public class HAConnection {
             return WriteSocketService.class.getSimpleName();
         }
 
-        @Override
-        public void shutdown() {
-            super.shutdown();
-        }
     }
 }

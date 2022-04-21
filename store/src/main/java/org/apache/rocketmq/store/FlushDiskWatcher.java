@@ -37,7 +37,7 @@ public class FlushDiskWatcher extends ServiceThread {
     @Override
     public void run() {
         while (!isStopped()) {
-            GroupCommitRequest request = null;
+            GroupCommitRequest request;
             try {
                 request = commitRequests.take();
             } catch (InterruptedException e) {
@@ -60,8 +60,7 @@ public class FlushDiskWatcher extends ServiceThread {
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
-                    log.warn(
-                            "An exception occurred while waiting for flushing disk to complete. this may caused by shutdown");
+                    log.warn("An exception occurred while waiting for flushing disk to complete. this may caused by shutdown");
                     break;
                 }
             }

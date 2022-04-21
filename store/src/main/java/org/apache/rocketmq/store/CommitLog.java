@@ -101,7 +101,8 @@ public class CommitLog {
             this.flushCommitLogService = new FlushRealTimeService();
         }
 
-        this.commitLogService = new CommitRealTimeService();
+        this.commitLogService = defaultMessageStore.getMessageStoreConfig().isTransientStorePoolEnable()
+                ? new CommitRealTimeService() : null;
 
         this.appendMessageCallback = new DefaultAppendMessageCallback(defaultMessageStore.getMessageStoreConfig().getMaxMessageSize());
         putMessageThreadLocal = new ThreadLocal<PutMessageThreadLocal>() {
@@ -269,7 +270,7 @@ public class CommitLog {
         }
     }
 
-    public DispatchRequest checkMessageAndReturnSize(java.nio.ByteBuffer byteBuffer, final boolean checkCRC) {
+    public DispatchRequest checkMessageAndReturnSize(ByteBuffer byteBuffer, final boolean checkCRC) {
         return this.checkMessageAndReturnSize(byteBuffer, checkCRC, true);
     }
 
@@ -284,7 +285,7 @@ public class CommitLog {
      *
      * @return 0 Come the end of the file // >0 Normal messages // -1 Message checksum failure
      */
-    public DispatchRequest checkMessageAndReturnSize(java.nio.ByteBuffer byteBuffer, final boolean checkCRC,
+    public DispatchRequest checkMessageAndReturnSize(ByteBuffer byteBuffer, final boolean checkCRC,
         final boolean readBody) {
         try {
             // 1 TOTAL SIZE
@@ -607,11 +608,10 @@ public class CommitLog {
     public CompletableFuture<PutMessageResult> asyncPutMessage(final MessageExtBrokerInner msg) {
         // Set the storage time
         msg.setStoreTimestamp(System.currentTimeMillis());
-        // Set the message body BODY CRC (consider the most appropriate setting
-        // on the client)
+        // Set the message body CRC (consider the most appropriate setting on the client)
         msg.setBodyCRC(UtilAll.crc32(msg.getBody()));
         // Back to Results
-        AppendMessageResult result = null;
+        AppendMessageResult result;
 
         StoreStatsService storeStatsService = this.defaultMessageStore.getStoreStatsService();
 
@@ -657,7 +657,7 @@ public class CommitLog {
         msg.setEncodedBuff(putMessageThreadLocal.getEncoder().encoderBuffer);
         PutMessageContext putMessageContext = new PutMessageContext(generateKey(putMessageThreadLocal.getKeyBuilder(), msg));
 
-        long elapsedTimeInLock = 0;
+        long elapsedTimeInLock;
         MappedFile unlockMappedFile = null;
 
         putMessageLock.lock(); //spin or ReentrantLock ,depending on store config
@@ -671,7 +671,7 @@ public class CommitLog {
             msg.setStoreTimestamp(beginLockTimestamp);
 
             if (null == mappedFile || mappedFile.isFull()) {
-                mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
+                mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may cause noise
             }
             if (null == mappedFile) {
                 log.error("create mapped file1 error, topic: " + msg.getTopic() + " clientAddr: " + msg.getBornHostString());
@@ -1356,7 +1356,7 @@ public class CommitLog {
             preEncodeBuffer.putLong(pos, queueOffset);
             pos += 8;
             // 7 PHYSICALOFFSET
-            preEncodeBuffer.putLong(pos, fileFromOffset + byteBuffer.position());
+            preEncodeBuffer.putLong(pos, wroteOffset);
             int ipLen = (msgInner.getSysFlag() & MessageSysFlag.BORNHOST_V6_FLAG) == 0 ? 4 + 4 : 16 + 4;
             // 8 SYSFLAG, 9 BORNTIMESTAMP, 10 BORNHOST, 11 STORETIMESTAMP
             pos += 8 + 4 + 8 + ipLen;
